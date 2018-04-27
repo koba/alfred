@@ -84,7 +84,6 @@ import com.smartdevicelink.proxy.rpc.UnsubscribeButtonResponse;
 import com.smartdevicelink.proxy.rpc.UnsubscribeVehicleDataResponse;
 import com.smartdevicelink.proxy.rpc.UpdateTurnListResponse;
 import com.smartdevicelink.proxy.rpc.VrHelpItem;
-import com.smartdevicelink.proxy.rpc.enums.ButtonName;
 import com.smartdevicelink.proxy.rpc.enums.FileType;
 import com.smartdevicelink.proxy.rpc.enums.HMILevel;
 import com.smartdevicelink.proxy.rpc.enums.ImageType;
@@ -101,8 +100,13 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
+
+import io.reactivex.functions.Consumer;
 
 public class SdlService extends Service implements IProxyListenerALM {
 
@@ -152,9 +156,8 @@ public class SdlService extends Service implements IProxyListenerALM {
 
 	private boolean firstNonHmiNone = true;
 	private boolean isVehicleDataSubscribed = false;
-	
-	
-	
+
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		return null;
@@ -271,17 +274,6 @@ public class SdlService extends Service implements IProxyListenerALM {
 			}
 		} else {
 			startProxy();
-		}
-	}
-
-	public void subButtons() {
-		try {
-			proxy.subscribeButton(ButtonName.OK, autoIncCorrId++);
-			//proxy.subscribeButton(ButtonName.SEEKLEFT, autoIncCorrId++);
-			//proxy.subscribeButton(ButtonName.SEEKRIGHT, autoIncCorrId++);
-			proxy.subscribeButton(ButtonName.TUNEUP, autoIncCorrId++);
-			proxy.subscribeButton(ButtonName.TUNEDOWN, autoIncCorrId++);
-		} catch (SdlException e) {
 		}
 	}
 
@@ -464,16 +456,29 @@ public class SdlService extends Service implements IProxyListenerALM {
 			}
 		}
 
-		if(!notification.getHmiLevel().equals(HMILevel.HMI_NONE)
-				&& firstNonHmiNone){
-			sampleCreateChoiceSet();
-			addCommandsSub();
-			sendCommands1();
-			sendCommands2();
-			sendCommands3();
-			sendCommands4();
-			subButtons();
-			SintonizaRadio("http://mixaac.crossradio.com.br:1100/live");
+		if(!notification.getHmiLevel().equals(HMILevel.HMI_NONE) && firstNonHmiNone){
+			// Add voice commands submenu
+			AddSubMenu submenu = new AddSubMenu();
+			submenu.setCorrelationID(autoIncCorrId++);
+			submenu.setMenuID(MENU_ID_VOICE_COMMANDS);
+			submenu.setMenuName("Comandos de voz");
+			submenu.setPosition(0);
+
+			try {
+				proxy.sendRPCRequest(submenu);
+			} catch (SdlException e) {
+				Log.i(TAG,"sync exception");
+				e.printStackTrace();
+			}
+
+			// send first non hmi notification
+			try {
+				if (onFirstNonHmi != null) {
+					onFirstNonHmi.accept(notification.getFirstRun());
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
 			firstNonHmiNone = false;
 			
@@ -486,57 +491,6 @@ public class SdlService extends Service implements IProxyListenerALM {
 			}
 		}
 		
-	}
-
-	public void sampleCreateChoiceSet()
-	{
-		int corrId = autoIncCorrId++;
-
-		Vector<Choice> commands = new Vector<Choice>();
-		Choice one = new Choice();
-		one.setChoiceID(99);
-		one.setMenuName("Um");
-		Vector<String> vrCommands = new Vector<String>();
-		vrCommands.add("Um");
-		vrCommands.add("1");
-		vrCommands.add("numero um");
-		one.setVrCommands(vrCommands);
-
-		//icon shown to the left on a choice set item
-		Image image1 = new Image();
-		image1.setImageType(ImageType.STATIC);
-		image1.setValue("0x89");
-		one.setImage(image1);
-		commands.add(one);
-
-		Choice two = new Choice();
-		two.setChoiceID(100);
-		two.setMenuName("Dois");
-		Vector<String> vrCommands2 = new Vector<String>();
-		vrCommands2.add("Dois");
-		vrCommands2.add("2");
-		vrCommands2.add("numero dois");
-		two.setVrCommands(vrCommands2);
-
-		Image image2 = new Image();
-		image2.setImageType(ImageType.STATIC);
-		image2.setValue("0x89");
-		two.setImage(image2);
-		commands.add(two);
-
-		//Build Request and send to proxy object:
-		CreateInteractionChoiceSet msg = new CreateInteractionChoiceSet();
-		msg.setCorrelationID(corrId);
-		int choiceSetID = 101;
-		msg.setInteractionChoiceSetID(choiceSetID);
-		msg.setChoiceSet(commands);
-
-		try {
-			proxy.sendRPCRequest(msg);
-		} catch (SdlException e) {
-			Log.i(TAG,"sync exception Choice");
-			e.printStackTrace();
-		}
 	}
 
 	public void samplePerformInteraction()
@@ -754,6 +708,20 @@ public class SdlService extends Service implements IProxyListenerALM {
 			case COMMAND_1:
 				sampleGetVehicleData();
 				break;
+			default:
+				try {
+					Iterator it = commands.entrySet().iterator();
+					while (it.hasNext()) {
+						Map.Entry<String, Consumer<Object>> entry = (Map.Entry<String, Consumer<Object>>) it.next();
+						if (id == entry.getKey().hashCode()) {
+							entry.getValue().accept(null);
+						}
+					}
+				}
+				catch (Exception ex) {
+					ex.printStackTrace();
+				}
+				break;
 			}
 
 		}
@@ -800,45 +768,23 @@ public class SdlService extends Service implements IProxyListenerALM {
 	@Override
 	public void onAddSubMenuResponse(AddSubMenuResponse response) {
         Log.i(TAG, "AddSubMenu response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-		boolean bSuccess = response.getSuccess();
 
-		// Create and build an AddCommand RPC
-		AddCommand msg = new AddCommand();
-		msg.setCmdID(COMMAND_1);
-		String menuName = "Velocidade";
-		MenuParams menuParams = new MenuParams();
-		menuParams.setMenuName(menuName);
-
-		// Set the parent ID to the submenu that was added only if the response was SUCCESS
-		if (bSuccess) {
-			menuParams.setParentID(SUBMENU_1);
+        if (!firstSubMenuAdded) {
+			firstSubMenuAdded = true;
+			if (onFirstSubMenuCreated != null) {
+				try {
+					onFirstSubMenuCreated.accept(true);
+				}
+				catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
 		}
-		msg.setMenuParams(menuParams);
-
-		// Build voice recognition commands
-		Vector<String> vrCommands = new Vector<String>();
-		vrCommands.add("Velocidade");
-		vrCommands.add("Velocidade do veiculo");
-		msg.setVrCommands(vrCommands);
-
-		// Set the correlation ID
-		int correlationId = autoIncCorrId++;
-		msg.setCorrelationID(correlationId);
-
-		// Send to proxy
-		try {
-			proxy.sendRPCRequest(msg);
-		} catch (SdlException e) {
-			Log.i(TAG,"sync exception");
-			e.printStackTrace();
-		}
-
 	}
 
 	@Override
 	public void onCreateInteractionChoiceSetResponse(CreateInteractionChoiceSetResponse response) {
         Log.i(TAG, "CreateInteractionChoiceSet response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
-
 	}
 
 	@Override
@@ -1189,6 +1135,54 @@ public class SdlService extends Service implements IProxyListenerALM {
             stopSelf();
 		}
 	};
+
+	/// KOBA
+
+	private final int MENU_ID_VOICE_COMMANDS = 1024;
+
+	private HashMap<String, Consumer<Object>> commands = new HashMap<>();
+	private boolean firstSubMenuAdded = false;
+
+	public Consumer<Boolean> onFirstNonHmi;
+	public Consumer<Boolean> onFirstSubMenuCreated;
+
+	public void executeCommand(String name, Object param) {
+		try {
+			commands.get(name).accept(param);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void registerCommand(String name, Consumer<Object> consumer) {
+		commands.put(name, consumer);
+
+		// Create and build an AddCommand RPC
+		MenuParams menuParams = new MenuParams();
+		menuParams.setMenuName(name);
+		menuParams.setParentID(MENU_ID_VOICE_COMMANDS);
+
+		AddCommand msg = new AddCommand();
+		msg.setCmdID(name.hashCode());
+		msg.setMenuParams(menuParams);
+
+		// Build voice recognition commands
+		Vector<String> vrCommands = new Vector<String>();
+		vrCommands.add(name);
+		vrCommands.add("probar");
+		msg.setVrCommands(vrCommands);
+
+		// Set the correlation ID
+		msg.setCorrelationID(autoIncCorrId++);
+
+		// Send to proxy
+		try {
+			proxy.sendRPCRequest(msg);
+		} catch (SdlException e) {
+			Log.i(TAG,"sync exception");
+			e.printStackTrace();
+		}
+	}
 
 	public void playAudio(String message) {
 		try {

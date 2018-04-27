@@ -3,6 +3,7 @@ package com.applink.ford.hellosdlandroid;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -37,21 +38,35 @@ public class MainActivity extends Activity {
 
     @AfterViews
     protected void init() {
-        Alfred.getInstance().wakeUp();
-
         initProviders();
         initProvidersListView();
     }
 
     @Background
     protected void initProviders() {
-        TwitterProvider twitter = new TwitterProvider();
+        final TwitterProvider twitter = new TwitterProvider();
+
         twitter.onNotificationReceived(new Consumer<String>() {
             @Override
             public void accept(String s) throws Exception {
                 Alfred.getInstance().speak(s);
             }
         });
+
+        Alfred.getInstance().onCarInitialized = new Consumer<Boolean>() {
+            @Override
+            public void accept(Boolean aBoolean) throws Exception {
+                Alfred.getInstance().sayHello();
+            }
+        };
+
+        Alfred.getInstance().onCarMenuAvailable = new Consumer<Boolean>() {
+            @Override
+            public void accept(Boolean aBoolean) throws Exception {
+                twitter.injectCommands(Alfred.getInstance());
+            }
+        };
+
     }
 
     private void initProvidersListView() {

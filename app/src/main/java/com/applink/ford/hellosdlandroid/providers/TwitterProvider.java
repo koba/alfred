@@ -4,6 +4,8 @@ package com.applink.ford.hellosdlandroid.providers;
  * Created by agurz on 4/27/18.
  */
 
+import com.applink.ford.hellosdlandroid.Alfred;
+
 import io.reactivex.functions.Consumer;
 import twitter4j.DirectMessage;
 import twitter4j.StallWarning;
@@ -38,10 +40,10 @@ public class TwitterProvider {
 
         twitter = new TwitterFactory(conf).getInstance();
 
-        startUserStreamListeners();
+        initUserStreamListeners();
     }
 
-    private void startUserStreamListeners() {
+    private void initUserStreamListeners() {
         TwitterStream stream = new TwitterStreamFactory(conf).getInstance();
 
         stream.addListener(new UserStreamListener() {
@@ -67,12 +69,12 @@ public class TwitterProvider {
 
             @Override
             public void onFollow(User source, User followedUser) {
-                acceptNotificationConsumer(source.getScreenName() + " te está siguiendo");
+                triggerNotificationConsumer(makeTweeterUsernamePronounceable(source.getScreenName()) + " te está siguiendo");
             }
 
             @Override
             public void onUnfollow(User source, User unfollowedUser) {
-                acceptNotificationConsumer(source.getScreenName() + " ha dejado de seguirte");
+                triggerNotificationConsumer(makeTweeterUsernamePronounceable(source.getScreenName()) + " ha dejado de seguirte");
             }
 
             @Override
@@ -132,7 +134,7 @@ public class TwitterProvider {
 
             @Override
             public void onStatus(Status status) {
-                acceptNotificationConsumer(status.getUser().getScreenName() + " ha twitteado: " + status.getText());
+                triggerNotificationConsumer(makeTweeterUsernamePronounceable(status.getUser().getScreenName()) + " ha twitteado: " + status.getText());
             }
 
             @Override
@@ -164,7 +166,20 @@ public class TwitterProvider {
         stream.user();
     }
 
-    private void acceptNotificationConsumer(String message) {
+    public void injectCommands(Alfred alfred) {
+        alfred.registerCommand("tweet", new Consumer<Object>() {
+            @Override
+            public void accept(Object o) throws Exception {
+
+            }
+        });
+    }
+
+    private String makeTweeterUsernamePronounceable(String username) {
+        return username.replace(".", " punto ");
+    }
+
+    private void triggerNotificationConsumer(String message) {
         try {
             if (notificationReceivedConsumer != null) {
                 notificationReceivedConsumer.accept(message);
