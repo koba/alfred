@@ -21,7 +21,7 @@ import java.util.List;
 public class ProvidersListAdapter extends ArrayAdapter<String> {
 
     private String[] providers = {
-        "Twitter"
+        "TwitterProvider"
     };
 
     private int[] providersIcons = {

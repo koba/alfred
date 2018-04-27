@@ -30,8 +30,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.applink.ford.hellosdlandroid.R;
+import com.applink.ford.hellosdlandroid.providers.TwitterProvider;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
 
 @EActivity(R.layout.activity_twitter_login)
@@ -82,6 +84,16 @@ public class TwitterLoginActivity extends Activity implements LoaderCallbacks<Cu
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+
+        testTwitter();
+    }
+
+    @Background
+    protected void testTwitter() {
+        TwitterProvider p = new TwitterProvider();
+        p.init();
+        p.startNotificationsListener();
     }
 
     private void populateAutoComplete() {
