@@ -131,6 +131,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 	private SdlProxyALM proxy = null;
 
 	private boolean firstNonHmiNone = true;
+	private boolean isVehicleDataSubscribed = false;
 
 
 	@Override
