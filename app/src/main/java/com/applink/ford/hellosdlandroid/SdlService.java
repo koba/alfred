@@ -2,7 +2,6 @@ package com.applink.ford.hellosdlandroid;
 
 import android.app.Service;
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -22,8 +21,6 @@ import com.smartdevicelink.proxy.rpc.AddSubMenuResponse;
 import com.smartdevicelink.proxy.rpc.AlertManeuverResponse;
 import com.smartdevicelink.proxy.rpc.AlertResponse;
 import com.smartdevicelink.proxy.rpc.ChangeRegistrationResponse;
-import com.smartdevicelink.proxy.rpc.Choice;
-import com.smartdevicelink.proxy.rpc.CreateInteractionChoiceSet;
 import com.smartdevicelink.proxy.rpc.CreateInteractionChoiceSetResponse;
 import com.smartdevicelink.proxy.rpc.DeleteCommandResponse;
 import com.smartdevicelink.proxy.rpc.DeleteFileResponse;
@@ -57,7 +54,6 @@ import com.smartdevicelink.proxy.rpc.OnTBTClientState;
 import com.smartdevicelink.proxy.rpc.OnTouchEvent;
 import com.smartdevicelink.proxy.rpc.OnVehicleData;
 import com.smartdevicelink.proxy.rpc.PerformAudioPassThruResponse;
-import com.smartdevicelink.proxy.rpc.PerformInteraction;
 import com.smartdevicelink.proxy.rpc.PerformInteractionResponse;
 import com.smartdevicelink.proxy.rpc.PutFile;
 import com.smartdevicelink.proxy.rpc.PutFileResponse;
@@ -79,27 +75,21 @@ import com.smartdevicelink.proxy.rpc.StreamRPCResponse;
 import com.smartdevicelink.proxy.rpc.SubscribeButtonResponse;
 import com.smartdevicelink.proxy.rpc.SubscribeVehicleDataResponse;
 import com.smartdevicelink.proxy.rpc.SystemRequestResponse;
-import com.smartdevicelink.proxy.rpc.TTSChunk;
 import com.smartdevicelink.proxy.rpc.UnsubscribeButtonResponse;
 import com.smartdevicelink.proxy.rpc.UnsubscribeVehicleDataResponse;
 import com.smartdevicelink.proxy.rpc.UpdateTurnListResponse;
-import com.smartdevicelink.proxy.rpc.VrHelpItem;
 import com.smartdevicelink.proxy.rpc.enums.FileType;
 import com.smartdevicelink.proxy.rpc.enums.HMILevel;
 import com.smartdevicelink.proxy.rpc.enums.ImageType;
-import com.smartdevicelink.proxy.rpc.enums.InteractionMode;
 import com.smartdevicelink.proxy.rpc.enums.LockScreenStatus;
 import com.smartdevicelink.proxy.rpc.enums.Result;
 import com.smartdevicelink.proxy.rpc.enums.SdlDisconnectedReason;
 import com.smartdevicelink.proxy.rpc.enums.SoftButtonType;
-import com.smartdevicelink.proxy.rpc.enums.SpeechCapabilities;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -110,21 +100,18 @@ import io.reactivex.functions.Consumer;
 
 public class SdlService extends Service implements IProxyListenerALM {
 
-	private static final String TAG 					= "SDL Service";
-
-	private static final String APP_NAME 				= "Campus Ford";
+	private static final String APP_NAME 				= "Alfred Ford";
 	private static final String APP_ID 					= "260537589";
-	
 	private static final String ICON_FILENAME 			= "hello_sdl_icon.png";
-	private int iconCorrelationId;
+	private static final String TAG 					= "AlfredFord";
 
-	MediaPlayer mediaPlayer;
+	private int iconCorrelationId;
 
 	List<String> remoteFiles;
 	
 	private static final String WELCOME_SHOW 			= "Bem-Vindo ao Aplicativo Ford";
 	private static final String WELCOME_SPEAK 			= "Bem Vindo ao Aplicativo Ford";
-	
+
 	private static final int COMMAND_1 = 5;
 
 	private static final int performCorID = 101;
@@ -144,7 +131,6 @@ public class SdlService extends Service implements IProxyListenerALM {
 	private SdlProxyALM proxy = null;
 
 	private boolean firstNonHmiNone = true;
-	private boolean isVehicleDataSubscribed = false;
 
 
 	@Override
@@ -154,9 +140,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 
 	@Override
 	public void onCreate() {
-        Log.d(TAG, "onCreate");
 		super.onCreate();
-		mediaPlayer = new MediaPlayer();
 		instance = this;
 		remoteFiles = new ArrayList<>();
 	}
