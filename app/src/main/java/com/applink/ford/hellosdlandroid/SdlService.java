@@ -1190,4 +1190,12 @@ public class SdlService extends Service implements IProxyListenerALM {
 		}
 	};
 
+	public void playAudio(String message) {
+		try {
+			proxy.speak(message, autoIncCorrId++);
+		} catch (SdlException e) {
+			e.printStackTrace();
+		}
+	}
+
 }

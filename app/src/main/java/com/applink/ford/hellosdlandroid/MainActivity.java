@@ -11,11 +11,15 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.applink.ford.hellosdlandroid.activities.TwitterLoginActivity_;
+import com.applink.ford.hellosdlandroid.providers.TwitterProvider;
 import com.applink.ford.hellosdlandroid.views.adapter.ProvidersListAdapter;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
+
+import io.reactivex.functions.Consumer;
 
 @EActivity(R.layout.activity_main)
 public class MainActivity extends Activity {
@@ -25,8 +29,32 @@ public class MainActivity extends Activity {
 
     ArrayAdapter<String> providersListAdapter;
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+
     @AfterViews
     protected void init() {
+        Alfred.getInstance().wakeUp();
+
+        initProviders();
+        initProvidersListView();
+    }
+
+    @Background
+    protected void initProviders() {
+        TwitterProvider twitter = new TwitterProvider();
+        twitter.onNotificationReceived(new Consumer<String>() {
+            @Override
+            public void accept(String s) throws Exception {
+                Alfred.getInstance().speak(s);
+            }
+        });
+    }
+
+    private void initProvidersListView() {
         providersListAdapter = new ProvidersListAdapter(this, android.R.layout.simple_list_item_1);
         providersListView.setAdapter(providersListAdapter);
         providersListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

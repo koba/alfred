@@ -32,8 +32,10 @@ buildscript {
 dependencies {
     annotationProcessor 'org.androidannotations:androidannotations:4.2.+'
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'io.reactivex.rxjava2:rxjava:2.+'
     compile 'org.androidannotations:androidannotations-api:4.2.+'
     compile 'org.twitter4j:twitter4j-core:4.0.2'
+    compile 'org.twitter4j:twitter4j-stream:4.0.2'
 }
 
 repositories {
