@@ -95,5 +95,6 @@
     <orderEntry type="jdk" jdkName="Android API 22 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="__local_jars__:/Users/agurz/Code/ford-sync-android-demo/app/libs/SmartDeviceLinkLibrary-4.0.0-Android.jar:unspecified@jar" level="project" />
+    <orderEntry type="library" exported="" name="org.androidannotations:androidannotations-api:4.2.0@jar" level="project" />
   </component>
 </module>

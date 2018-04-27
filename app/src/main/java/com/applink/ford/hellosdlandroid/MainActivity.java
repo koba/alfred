@@ -1,16 +1,40 @@
 package com.applink.ford.hellosdlandroid;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
+import com.applink.ford.hellosdlandroid.activities.TwitterLoginActivity_;
+import com.applink.ford.hellosdlandroid.views.adapter.ProvidersListAdapter;
+
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.ViewById;
+
+@EActivity(R.layout.activity_main)
 public class MainActivity extends Activity {
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    @ViewById(R.id.providers_list)
+    ListView providersListView;
+
+    ArrayAdapter<String> providersListAdapter;
+
+    @AfterViews
+    protected void init() {
+        providersListAdapter = new ProvidersListAdapter(this, android.R.layout.simple_list_item_1);
+        providersListView.setAdapter(providersListAdapter);
+        providersListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                startActivity(new Intent(MainActivity.this, TwitterLoginActivity_.class));
+            }
+        });
     }
 
     @Override
@@ -34,4 +58,5 @@ public class MainActivity extends Activity {
 
         return super.onOptionsItemSelected(item);
     }
+
 }

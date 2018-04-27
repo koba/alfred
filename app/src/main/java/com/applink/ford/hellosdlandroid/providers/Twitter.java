@@ -5,6 +5,6 @@ package com.applink.ford.hellosdlandroid.providers;
  */
 
 public class Twitter {
-    
+
 
 }
