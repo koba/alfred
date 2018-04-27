@@ -125,18 +125,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 	private static final String WELCOME_SHOW 			= "Bem-Vindo ao Aplicativo Ford";
 	private static final String WELCOME_SPEAK 			= "Bem Vindo ao Aplicativo Ford";
 	
-	private static final String TEST_COMMAND_NAME1 		= "Mensagem";
-	private static final String TEST_COMMAND_NAME2 		= "Interação";
-	private static final String TEST_COMMAND_NAME3 		= "Alerta";
-	private static final String TEST_COMMAND_NAME4 		= "Display";
-
-	private static final int SUBMENU_1 = 100;
 	private static final int COMMAND_1 = 5;
-
-	private static final int TEST_COMMAND_ID1 			= 1;
-	private static final int TEST_COMMAND_ID2 			= 2;
-	private static final int TEST_COMMAND_ID3 			= 3;
-	private static final int TEST_COMMAND_ID4 			= 4;
 
 	private static final int performCorID = 101;
 
@@ -188,33 +177,6 @@ public class SdlService extends Service implements IProxyListenerALM {
 		instance = null;
 		super.onDestroy();
 	}
-
-	public void SintonizaRadio(String StreamMusiPath){
-		if(mediaPlayer.isPlaying()){
-			mediaPlayer.release();
-			mediaPlayer = new MediaPlayer();
-			mediaPlayer.reset();
-		}
-
-		try {
-			String streamPath = StreamMusiPath;
-			mediaPlayer.setDataSource(streamPath);
-			try {
-				mediaPlayer.prepare();
-			} catch (MalformedURLException ex) {
-				throw new RuntimeException("Errro na URL! " + ex);
-			} catch (IllegalStateException ex) {
-			} catch (IllegalArgumentException ex) {
-				throw new RuntimeException("Errro na URL! " + ex);
-			}
-			mediaPlayer.start();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
 
 	public static SdlService getInstance() {
 		return instance;
@@ -274,80 +236,6 @@ public class SdlService extends Service implements IProxyListenerALM {
 			}
 		} else {
 			startProxy();
-		}
-	}
-
-	/**
-	 * Will show a sample test message on screen as well as speak a sample test message
-	 */
-	public void showscrollablemessage(){
-		try {
-			proxy.scrollablemessage("O entrelaçamento quântico (ou emaranhamento quântico, como é mais conhecido na comunidade científica) é +" +
-					"um fenômeno da mecânica quântica que permite que dois ou mais objetos estejam de alguma forma tão ligados que um objeto não +" +
-					"possa ser corretamente descrito sem que a sua contra-parte seja mencionada - mesmo que os objetos possam estar espacialmente +" +
-					"separados por milhões de anos-luz.",30000,null, autoIncCorrId++);
-		} catch (SdlException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 *  Add commands for the app on SDL.
-	 */
-	public void sendCommands1(){
-		AddCommand command;
-		MenuParams params = new MenuParams();
-		params.setMenuName(TEST_COMMAND_NAME1);
-		command = new AddCommand();
-		command.setCmdID(TEST_COMMAND_ID1);
-		command.setMenuParams(params);
-		command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME1}));
-		sendRpcRequest(command);
-	}
-	public void sendCommands2(){
-		AddCommand command;
-		MenuParams params = new MenuParams();
-		params.setMenuName(TEST_COMMAND_NAME2);
-		command = new AddCommand();
-		command.setCmdID(TEST_COMMAND_ID2);
-		command.setMenuParams(params);
-		command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME2}));
-		sendRpcRequest(command);
-	}
-	public void sendCommands3(){
-		AddCommand command;
-		MenuParams params = new MenuParams();
-		params.setMenuName(TEST_COMMAND_NAME3);
-		command = new AddCommand();
-		command.setCmdID(TEST_COMMAND_ID3);
-		command.setMenuParams(params);
-		command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME3}));
-		sendRpcRequest(command);
-	}
-	public void sendCommands4(){
-		AddCommand command;
-		MenuParams params = new MenuParams();
-		params.setMenuName(TEST_COMMAND_NAME4);
-		command = new AddCommand();
-		command.setCmdID(TEST_COMMAND_ID4);
-		command.setMenuParams(params);
-		command.setVrCommands(Arrays.asList(new String[]{TEST_COMMAND_NAME4}));
-		sendRpcRequest(command);
-	}
-
-	public void addCommandsSub() {
-
-		AddSubMenu submenu = new AddSubMenu();
-		submenu.setMenuName("SubMenu");
-		submenu.setPosition(0);
-		submenu.setMenuID(SUBMENU_1);
-		submenu.setCorrelationID(autoIncCorrId++);
-
-		try {
-			proxy.sendRPCRequest(submenu);
-		} catch (SdlException e) {
-			Log.i(TAG,"sync exception");
-			e.printStackTrace();
 		}
 	}
 
@@ -428,8 +316,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 
 	@Override
 	public void onProxyClosed(String info, Exception e, SdlDisconnectedReason reason) {
-
-		if(!(e instanceof SdlException)){
+		if (!(e instanceof SdlException)){
 			Log.v(TAG, "reset proxy in onproxy closed");
 			reset();
 		}
@@ -442,21 +329,21 @@ public class SdlService extends Service implements IProxyListenerALM {
 			}
 		}
 
-
 		stopSelf();
 	}
 
 	@Override
 	public void onOnHMIStatus(OnHMIStatus notification) {
 		Log.d(TAG, notification.getHmiLevel().toString());
-		if(notification.getHmiLevel().equals(HMILevel.HMI_FULL)){
+
+		if (notification.getHmiLevel().equals(HMILevel.HMI_FULL)) {
 			if (notification.getFirstRun()) {
 				// send welcome message if applicable
 				performWelcomeMessage();
 			}
 		}
 
-		if(!notification.getHmiLevel().equals(HMILevel.HMI_NONE) && firstNonHmiNone){
+		if (!notification.getHmiLevel().equals(HMILevel.HMI_NONE) && firstNonHmiNone) {
 			// Add voice commands submenu
 			AddSubMenu submenu = new AddSubMenu();
 			submenu.setCorrelationID(autoIncCorrId++);
@@ -483,7 +370,8 @@ public class SdlService extends Service implements IProxyListenerALM {
 			firstNonHmiNone = false;
 			
 			// Other app setup (SubMenu, CreateChoiceSet, etc.) would go here
-		}else{
+		}
+		else{
 			//We have HMI_NONE
 			if(notification.getFirstRun()){
 				uploadImages();
@@ -493,69 +381,10 @@ public class SdlService extends Service implements IProxyListenerALM {
 		
 	}
 
-	public void samplePerformInteraction()
-	{
-		/******Prerequisite CreateInteractionChoiceSet Occurs Prior to PerformInteraction*******/
-		//Build Request and send to proxy object:
-		int corrId = performCorID;
-		PerformInteraction msg = new PerformInteraction();
-		msg.setCorrelationID(corrId);
-		msg.setInitialText("Opções: ");
-
-		Vector<TTSChunk> chunksinit = new Vector<TTSChunk>();
-		TTSChunk chunkI = new TTSChunk();
-		chunkI.setText("Por favor, escolha uma opção");
-		chunkI.setType(SpeechCapabilities.TEXT);
-		chunksinit.add(chunkI);
-
-		msg.setInitialPrompt(chunksinit);
-		msg.setInteractionMode(InteractionMode.BOTH);
-
-		Vector<Integer> choiceSetIDs = new Vector<Integer>();
-		choiceSetIDs.add(101); // match the ID used in CreateInteractionChoiceSet
-		msg.setInteractionChoiceSetIDList(choiceSetIDs);
-
-		Vector<TTSChunk> chunksAjuda = new Vector<TTSChunk>();
-		TTSChunk chunkA = new TTSChunk();
-		chunkA.setText("Um ou Dois");
-		chunkA.setType(SpeechCapabilities.TEXT);
-		chunksAjuda.add(chunkA);
-
-		Vector<TTSChunk> chunksTimeout = new Vector<TTSChunk>();
-		TTSChunk chunkT = new TTSChunk();
-		chunkT.setText("Timeout");
-		chunkT.setType(SpeechCapabilities.TEXT);
-		chunksTimeout.add(chunkT);
-
-		msg.setHelpPrompt(chunksAjuda);
-		msg.setTimeoutPrompt(chunksTimeout);
-		msg.setTimeout(50000); //min value 5000, max 10000 milliseconds
-
-		Vector<VrHelpItem> vrHelpItems = new Vector<VrHelpItem>();
-		VrHelpItem item1 = new VrHelpItem();
-		item1.setText("Um");
-		item1.setPosition(1);
-		VrHelpItem item2 = new VrHelpItem();
-		item2.setText("Dois");
-		item2.setPosition(2);
-
-		vrHelpItems.add(item1);
-		vrHelpItems.add(item2);
-		msg.setVrHelp(vrHelpItems);
-
-		try{
-			proxy.sendRPCRequest(msg);
-		} catch (SdlException e) {
-			Log.i(TAG,"sync exception");
-			e.printStackTrace();
-		}
-	}
-
-
 	/**
 	 * Will show a sample welcome message on screen as well as speak a sample welcome message
 	 */
-	private void performWelcomeMessage(){
+	private void performWelcomeMessage() {
 		try {
 			//Set the welcome message on screen
 
@@ -593,8 +422,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 		
 	}
 
-	public void sampleGetVehicleData()
-	{
+	public void sampleGetVehicleData() {
 		//Build Request and send to proxy object:
 		int corrId = autoIncCorrId++;
 		GetVehicleData msg = new GetVehicleData();
@@ -683,28 +511,9 @@ public class SdlService extends Service implements IProxyListenerALM {
 	@Override
 	public void onOnCommand(OnCommand notification){
 		Integer id = notification.getCmdID();
-		if(id != null){
+
+		if (id != null) {
 			switch(id){
-			case TEST_COMMAND_ID1:
-				showscrollablemessage();
-				break;
-			case TEST_COMMAND_ID2:
-				samplePerformInteraction();
-				break;
-			case TEST_COMMAND_ID3:
-				try {
-					proxy.alert("Olá, este é o Aplicativo Ford","Olá", "Aplicativo Ford",null,true,5000,null,autoIncCorrId++);
-				} catch (SdlException e) {
-					e.printStackTrace();
-				}
-				break;
-			case TEST_COMMAND_ID4:
-				try {
-					proxy.setdisplaylayout("TEXTBUTTONS_WITH_GRAPHIC", autoIncCorrId++);
-				} catch (SdlException e) {
-					e.printStackTrace();
-				}
-				break;
 			case COMMAND_1:
 				sampleGetVehicleData();
 				break;
@@ -723,7 +532,6 @@ public class SdlService extends Service implements IProxyListenerALM {
 				}
 				break;
 			}
-
 		}
 	}
 
@@ -736,10 +544,10 @@ public class SdlService extends Service implements IProxyListenerALM {
 
 	}
 
-	
+
 	/*  Vehicle Data   */
-	
-	
+
+
 	@Override
 	public void onOnPermissionsChange(OnPermissionsChange notification) {
 		Log.i(TAG, "Permision changed: " + notification);
@@ -758,13 +566,11 @@ public class SdlService extends Service implements IProxyListenerALM {
 		Log.i(TAG, "Vehicle data notification from SDL");
 		//TODO Put your vehicle data code here
 		//ie, notification.getSpeed().
-
 	}
 	
 	/**
 	 * Rest of the SDL callbacks from the head unit
 	 */
-	
 	@Override
 	public void onAddSubMenuResponse(AddSubMenuResponse response) {
         Log.i(TAG, "AddSubMenu response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
@@ -829,8 +635,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onResetGlobalPropertiesResponse(
-			ResetGlobalPropertiesResponse response) {
+	public void onResetGlobalPropertiesResponse(ResetGlobalPropertiesResponse response) {
         Log.i(TAG, "ResetGlobalProperties response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 	}
 
@@ -862,27 +667,6 @@ public class SdlService extends Service implements IProxyListenerALM {
 	@Override
 	public void onOnButtonPress(OnButtonPress notification) {
         Log.i(TAG, "OnButtonPress notification from SDL: " + notification);
-		switch (notification.getButtonName()) {
-			case CUSTOM_BUTTON:
-					switch (notification.getCustomButtonName()) {
-						case 1: // rss icon was pressed on main screen
-							Log.i(TAG, "start was pressed");
-							try {
-								proxy.setdisplaylayout("TILES_WITH_GRAPHIC", autoIncCorrId++);
-							} catch (SdlException e) {
-								Log.i(TAG,"sync exception");
-								e.printStackTrace();
-							}
-							break;
-					}
-				break;
-			case OK:
-				SintonizaRadio("http://mixaac.crossradio.com.br:1100/live");
-				//mediaPlayer.release();
-				//mediaPlayer = new MediaPlayer();
-				//mediaPlayer.reset();
-				break;
-		}
 	}
 
 	@Override

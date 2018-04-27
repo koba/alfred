@@ -55,9 +55,6 @@ public class Alfred {
         SdlService.getInstance().playAudio(s);
     }
 
-    public void wakeUp() {
-        // nothing to do yet
-    }
 
     public static Alfred getInstance() {
         if (instance == null) instance = new Alfred();
