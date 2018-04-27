@@ -52,6 +52,13 @@ public class MainActivity extends Activity {
             }
         });
 
+        twitter.onMediaReceived(new Consumer<String>() {
+            @Override
+            public void accept(String s) throws Exception {
+                Alfred.getInstance().showImage(s);
+            }
+        });
+
         // Alfred handlers
 
         Alfred.getInstance().wakeUp();

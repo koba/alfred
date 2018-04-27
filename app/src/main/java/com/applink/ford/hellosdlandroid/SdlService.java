@@ -62,6 +62,7 @@ import com.smartdevicelink.proxy.rpc.ResetGlobalPropertiesResponse;
 import com.smartdevicelink.proxy.rpc.ScrollableMessageResponse;
 import com.smartdevicelink.proxy.rpc.SendLocationResponse;
 import com.smartdevicelink.proxy.rpc.SetAppIconResponse;
+import com.smartdevicelink.proxy.rpc.SetDisplayLayout;
 import com.smartdevicelink.proxy.rpc.SetDisplayLayoutResponse;
 import com.smartdevicelink.proxy.rpc.SetGlobalPropertiesResponse;
 import com.smartdevicelink.proxy.rpc.SetMediaClockTimerResponse;
@@ -106,6 +107,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 	private static final String TAG 					= "SDL Service";
 
 	private int iconCorrelationId;
+	private int imageCorrelation = 0;
 
 	List<String> remoteFiles;
 	
@@ -251,7 +253,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 		iconCorrelationId = autoIncCorrId++;
 		uploadImage(R.drawable.ic_launcher, ICON_FILENAME, iconCorrelationId, true);
 	}
-	
+
 	/**
 	 * This method will help upload an image to the head unit
 	 * @param resource the R.drawable.__ value of the image you wish to send
@@ -331,11 +333,19 @@ public class SdlService extends Service implements IProxyListenerALM {
 		if (notification.getHmiLevel().equals(HMILevel.HMI_FULL)) {
 			if (notification.getFirstRun()) {
 				// send welcome message if applicable
-				performWelcomeMessage();
+				//performWelcomeMessage();
 			}
 		}
 
 		if (!notification.getHmiLevel().equals(HMILevel.HMI_NONE) && firstNonHmiNone) {
+			// set display layout
+			try {
+				proxy.setdisplaylayout("LARGE_GRAPHIC_ONLY", autoIncCorrId++);
+				//proxy.sendRPCRequest(setDisplayLayoutRequest);
+			} catch (SdlException e) {
+				e.printStackTrace();
+			}
+
 			// Add voice commands submenu
 			AddSubMenu submenu = new AddSubMenu();
 			submenu.setCorrelationID(autoIncCorrId++);
@@ -346,7 +356,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 			try {
 				proxy.sendRPCRequest(submenu);
 			} catch (SdlException e) {
-				Log.i(TAG,"sync exception");
+				Log.i(TAG, "sync exception");
 				e.printStackTrace();
 			}
 
@@ -360,8 +370,6 @@ public class SdlService extends Service implements IProxyListenerALM {
 			}
 
 			firstNonHmiNone = false;
-			
-			// Other app setup (SubMenu, CreateChoiceSet, etc.) would go here
 		}
 		else{
 			//We have HMI_NONE
@@ -369,47 +377,6 @@ public class SdlService extends Service implements IProxyListenerALM {
 				uploadImages();
                 mConnectionHandler.removeCallbacksAndMessages(null);
 			}
-		}
-		
-	}
-
-	/**
-	 * Will show a sample welcome message on screen as well as speak a sample welcome message
-	 */
-	private void performWelcomeMessage() {
-		try {
-			//Set the welcome message on screen
-
-			Show newShow = new Show();
-			newShow.setCorrelationID(autoIncCorrId++);
-			Image newImage = new Image();
-			newImage.setValue(ICON_FILENAME);
-			newImage.setImageType(ImageType.DYNAMIC);
-			newShow.setGraphic(newImage);
-			newShow.setMainField1(APP_NAME);
-			newShow.setMainField2(WELCOME_SHOW);
-
-			SoftButton newSB = new SoftButton();
-			newSB.setSoftButtonID(1);
-
-			newSB.setType(SoftButtonType.SBT_BOTH);
-
-			Image newImg = new Image();
-			newImg.setValue(ICON_FILENAME);
-			newImg.setImageType(ImageType.DYNAMIC);
-			newSB.setImage(newImg);
-			newSB.setText("Home");
-			Vector<SoftButton> softButtons = new Vector<SoftButton>();
-			softButtons.add(newSB);
-			newShow.setSoftButtons(softButtons);
-
-			proxy.sendRPCRequest(newShow);
-
-			//Say the welcome message
-			proxy.speak(WELCOME_SPEAK, autoIncCorrId++);
-			
-		} catch (SdlException e) {
-			e.printStackTrace();
 		}
 		
 	}
@@ -485,14 +452,29 @@ public class SdlService extends Service implements IProxyListenerALM {
 	@Override
 	public void onPutFileResponse(PutFileResponse response) {
 		Log.i(TAG, "onPutFileResponse from SDL");
-		if(response.getCorrelationID() == iconCorrelationId){ //If we have successfully uploaded our icon, we want to set it
+
+		if (response.getCorrelationID() == iconCorrelationId){ //If we have successfully uploaded our icon, we want to set it
 			try {
 				proxy.setappicon(ICON_FILENAME, autoIncCorrId++);
 			} catch (SdlException e) {
 				e.printStackTrace();
 			}
 		}
+		else {
+			Image image = new Image();
+			image.setImageType(ImageType.DYNAMIC);
+			image.setValue("alfred_twitter_media_" + (imageCorrelation - 1) + ".jpg");
 
+			Show show = new Show();
+			show.setGraphic(image);
+			show.setCorrelationID(autoIncCorrId++);
+
+			try {
+				proxy.sendRPCRequest(show);
+			} catch (SdlException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	@Override
@@ -567,7 +549,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 	public void onAddSubMenuResponse(AddSubMenuResponse response) {
         Log.i(TAG, "AddSubMenu response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-        if (response.getCorrelationID() == 0 && !firstSubMenuAdded) {
+        if (response.getCorrelationID() == 1 && !firstSubMenuAdded) {
 			firstSubMenuAdded = true;
 			if (onFirstSubMenuCreated != null) {
 				try {
@@ -948,7 +930,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 		vrCommands.add(name);
 		msg.setVrCommands(vrCommands);
 
-		// Set the correlation ID
+		// Set the correlation IDf
 		msg.setCorrelationID(autoIncCorrId++);
 
 		// Send to proxy
@@ -968,8 +950,20 @@ public class SdlService extends Service implements IProxyListenerALM {
 		}
 	}
 
-	public void showImage(android.media.Image image) {
+	public void showImage(byte[] buffer) {
+		PutFile putFile = new PutFile();
+		putFile.setFileType(FileType.GRAPHIC_JPEG);
+		putFile.setBulkData(buffer);
+		putFile.setCorrelationID(autoIncCorrId++);
+		putFile.setPersistentFile(true);
+		putFile.setSdlFileName("alfred_twitter_media_" + imageCorrelation++ + ".jpg");
+		putFile.setSystemFile(false);
 
+		try {
+			proxy.sendRPCRequest(putFile);
+		} catch (SdlException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

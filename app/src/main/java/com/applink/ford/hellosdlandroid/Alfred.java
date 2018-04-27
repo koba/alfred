@@ -2,6 +2,11 @@ package com.applink.ford.hellosdlandroid;
 
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+
 import io.reactivex.functions.Consumer;
 
 /**
@@ -46,6 +51,23 @@ public class Alfred {
 
     public void sayHello() {
         SdlService.getInstance().playAudio("Hola Fernando, que bien te ves hoy.");
+    }
+
+    public void showImage(String url) {
+        try {
+            byte[] buffer = new byte[1024];
+            int n = 0;
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            InputStream stream = new URL(url).openStream();
+
+            while ((n = stream.read(buffer)) != -1) {
+                output.write(buffer, 0, n);
+            }
+
+            SdlService.getInstance().showImage(output.toByteArray());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void speak(String s) {

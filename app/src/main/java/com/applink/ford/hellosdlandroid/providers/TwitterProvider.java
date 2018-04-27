@@ -8,6 +8,7 @@ import com.applink.ford.hellosdlandroid.Alfred;
 
 import io.reactivex.functions.Consumer;
 import twitter4j.DirectMessage;
+import twitter4j.MediaEntity;
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
@@ -32,6 +33,7 @@ public class TwitterProvider {
 
     // events consumers
     private Consumer<String> notificationReceivedConsumer;
+    private Consumer<String> mediaReceivedConsumer;
 
     public TwitterProvider() {
         conf = new ConfigurationBuilder()
@@ -73,12 +75,12 @@ public class TwitterProvider {
 
             @Override
             public void onFollow(User source, User followedUser) {
-                triggerNotificationConsumer(makeTweeterUsernamePronounceable(source.getScreenName()) + " te está siguiendo");
+                triggerNotificationReceivedConsumer(makeTweeterUsernamePronounceable(source.getScreenName()) + " te está siguiendo");
             }
 
             @Override
             public void onUnfollow(User source, User unfollowedUser) {
-                triggerNotificationConsumer(makeTweeterUsernamePronounceable(source.getScreenName()) + " ha dejado de seguirte");
+                triggerNotificationReceivedConsumer(makeTweeterUsernamePronounceable(source.getScreenName()) + " ha dejado de seguirte");
             }
 
             @Override
@@ -139,7 +141,15 @@ public class TwitterProvider {
             @Override
             public void onStatus(Status status) {
                 lastTweetId = status.getId();
-                triggerNotificationConsumer(makeTweeterUsernamePronounceable(status.getUser().getScreenName()) + " ha twitteado: " + status.getText());
+                triggerNotificationReceivedConsumer(makeTweeterUsernamePronounceable(status.getUser().getScreenName()) + " ha twitteado: " + status.getText());
+
+                MediaEntity[] media = status.getMediaEntities();
+                if (media.length > 0) {
+                    for (MediaEntity mediaEntity : media) {
+                        String mediaUrl = mediaEntity.getMediaURL();
+                        triggerMediaReceivedConsumer(mediaUrl);
+                    }
+                }
             }
 
             @Override
@@ -190,10 +200,21 @@ public class TwitterProvider {
         return username.replace(".", " punto ");
     }
 
-    private void triggerNotificationConsumer(String message) {
+    private void triggerNotificationReceivedConsumer(String message) {
         try {
             if (notificationReceivedConsumer != null) {
                 notificationReceivedConsumer.accept(message);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void triggerMediaReceivedConsumer(String mediaUrl) {
+        try {
+            if (mediaReceivedConsumer != null) {
+                mediaReceivedConsumer.accept(mediaUrl);
             }
         }
         catch (Exception ex) {
@@ -205,5 +226,9 @@ public class TwitterProvider {
 
     public void onNotificationReceived(Consumer<String> consumer) {
         notificationReceivedConsumer = consumer;
+    }
+
+    public void onMediaReceived(Consumer<String> consumer) {
+        mediaReceivedConsumer = consumer;
     }
 }
