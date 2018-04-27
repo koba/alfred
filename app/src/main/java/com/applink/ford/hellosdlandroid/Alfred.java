@@ -1,9 +1,6 @@
 package com.applink.ford.hellosdlandroid;
 
-import com.smartdevicelink.proxy.rpc.OnHMIStatus;
-
-import java.util.ArrayList;
-import java.util.HashMap;
+import android.util.Log;
 
 import io.reactivex.functions.Consumer;
 
@@ -16,15 +13,15 @@ public class Alfred {
     private static Alfred instance;
 
     // events
-    public Consumer<Boolean> onCarInitialized;
     public Consumer<Boolean> onCarMenuAvailable;
+    public Consumer<Boolean> onCarServiceStarted;
 
     public Alfred() {
         SdlService.getInstance().onFirstNonHmi = new Consumer<Boolean>() {
             @Override
             public void accept(Boolean res) throws Exception {
-                if (onCarInitialized != null) {
-                    onCarInitialized.accept(res);
+                if (onCarServiceStarted != null) {
+                    onCarServiceStarted.accept(res);
                 }
             }
         };
@@ -55,6 +52,9 @@ public class Alfred {
         SdlService.getInstance().playAudio(s);
     }
 
+    public void wakeUp() {
+        Log.i("Alfred", "Here I am");
+    }
 
     public static Alfred getInstance() {
         if (instance == null) instance = new Alfred();

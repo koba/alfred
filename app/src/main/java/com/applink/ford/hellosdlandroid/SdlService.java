@@ -100,10 +100,10 @@ import io.reactivex.functions.Consumer;
 
 public class SdlService extends Service implements IProxyListenerALM {
 
-	private static final String APP_NAME 				= "Alfred Ford";
+	private static final String APP_NAME 				= "Campus Ford";
 	private static final String APP_ID 					= "260537589";
 	private static final String ICON_FILENAME 			= "hello_sdl_icon.png";
-	private static final String TAG 					= "AlfredFord";
+	private static final String TAG 					= "SDL Service";
 
 	private int iconCorrelationId;
 
@@ -151,6 +151,13 @@ public class SdlService extends Service implements IProxyListenerALM {
         startProxy();
 		Log.d(TAG, "onStartCommand");
         mConnectionHandler.postDelayed(mCheckConnectionRunnable, CONNECTION_TIMEOUT);
+
+		try {
+			if (onServiceStarted != null)
+				onServiceStarted.accept(null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		return START_STICKY;
 	}
@@ -560,7 +567,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 	public void onAddSubMenuResponse(AddSubMenuResponse response) {
         Log.i(TAG, "AddSubMenu response from SDL: " + response.getResultCode().name() + " Info: " + response.getInfo());
 
-        if (!firstSubMenuAdded) {
+        if (response.getCorrelationID() == 0 && !firstSubMenuAdded) {
 			firstSubMenuAdded = true;
 			if (onFirstSubMenuCreated != null) {
 				try {
@@ -914,6 +921,7 @@ public class SdlService extends Service implements IProxyListenerALM {
 
 	public Consumer<Boolean> onFirstNonHmi;
 	public Consumer<Boolean> onFirstSubMenuCreated;
+	public Consumer<Boolean> onServiceStarted;
 
 	public void executeCommand(String name, Object param) {
 		try {
@@ -938,7 +946,6 @@ public class SdlService extends Service implements IProxyListenerALM {
 		// Build voice recognition commands
 		Vector<String> vrCommands = new Vector<String>();
 		vrCommands.add(name);
-		vrCommands.add("probar");
 		msg.setVrCommands(vrCommands);
 
 		// Set the correlation ID
@@ -959,6 +966,10 @@ public class SdlService extends Service implements IProxyListenerALM {
 		} catch (SdlException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void showImage(android.media.Image image) {
+
 	}
 
 }

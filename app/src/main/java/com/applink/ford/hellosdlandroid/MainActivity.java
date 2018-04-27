@@ -3,7 +3,6 @@ package com.applink.ford.hellosdlandroid;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -53,12 +52,9 @@ public class MainActivity extends Activity {
             }
         });
 
-        Alfred.getInstance().onCarInitialized = new Consumer<Boolean>() {
-            @Override
-            public void accept(Boolean aBoolean) throws Exception {
-                Alfred.getInstance().sayHello();
-            }
-        };
+        // Alfred handlers
+
+        Alfred.getInstance().wakeUp();
 
         Alfred.getInstance().onCarMenuAvailable = new Consumer<Boolean>() {
             @Override
@@ -67,6 +63,12 @@ public class MainActivity extends Activity {
             }
         };
 
+        Alfred.getInstance().onCarServiceStarted = new Consumer<Boolean>() {
+            @Override
+            public void accept(Boolean aBoolean) throws Exception {
+                Alfred.getInstance().sayHello();
+            }
+        };
     }
 
     private void initProvidersListView() {

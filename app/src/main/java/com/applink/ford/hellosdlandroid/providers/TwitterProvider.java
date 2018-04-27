@@ -23,11 +23,15 @@ import twitter4j.conf.ConfigurationBuilder;
 
 public class TwitterProvider {
 
-    Configuration conf;
-    Twitter twitter;
+    private final String NAME = "Fernando";
+
+    private Configuration conf;
+    private Twitter twitter;
+
+    private long lastTweetId = 0;
 
     // events consumers
-    Consumer<String> notificationReceivedConsumer;
+    private Consumer<String> notificationReceivedConsumer;
 
     public TwitterProvider() {
         conf = new ConfigurationBuilder()
@@ -134,6 +138,7 @@ public class TwitterProvider {
 
             @Override
             public void onStatus(Status status) {
+                lastTweetId = status.getId();
                 triggerNotificationConsumer(makeTweeterUsernamePronounceable(status.getUser().getScreenName()) + " ha twitteado: " + status.getText());
             }
 
@@ -166,11 +171,17 @@ public class TwitterProvider {
         stream.user();
     }
 
-    public void injectCommands(Alfred alfred) {
-        alfred.registerCommand("tweet", new Consumer<Object>() {
+    public void injectCommands(final Alfred alfred) {
+        alfred.registerCommand("retweet", new Consumer<Object>() {
             @Override
             public void accept(Object o) throws Exception {
-
+                if (lastTweetId > 0) {
+                    twitter.retweetStatus(lastTweetId);
+                    alfred.speak("Listo");
+                }
+                else {
+                    alfred.speak("Lo siento " + NAME + ", no has recibido ningún tweet ultimamente");
+                }
             }
         });
     }
