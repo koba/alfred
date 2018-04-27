@@ -30,12 +30,10 @@ public class TwitterProvider {
     public TwitterProvider() {
         conf = new ConfigurationBuilder()
                 .setDebugEnabled(true)
-                .setUser("_agurodriguez")
-                .setPassword("Koba2018")
-                .setOAuthConsumerKey("8J4m2aaF3OUWyGxtCJW5JFpn1")
-                .setOAuthConsumerSecret("ZNCGtt82FhIh5zFdszyGB4MlljpJrSTtRyIpjwyCMvUBjzBvS2")
-                .setOAuthAccessToken("184120521-fxReyv6s285HRbh2KppUeDWxMr2qcm6oSfnv2b8J")
-                .setOAuthAccessTokenSecret("YzNOvMso9zMSPxIzkwrRpM18Gd8BRseyXl8GVYjR61Wzp")
+                .setOAuthConsumerKey("w3fhedEf5kiJXTCi6w6pEtIwI")
+                .setOAuthConsumerSecret("8W4eQBecIcrN5mwMdhsg2DZTQ1Rbrpgr8VHsj6g8II74CLKabL")
+                .setOAuthAccessToken("1317765637-KKWGbvxHProtW82AxCgj60KWVl7YDbTBlaLAweJ")
+                .setOAuthAccessTokenSecret("MoejDkxhUZFb4psZtg5azDF6Ae0Y5iNQNvQlHBzH87tRS")
                 .build();
 
         twitter = new TwitterFactory(conf).getInstance();
@@ -44,7 +42,7 @@ public class TwitterProvider {
     }
 
     private void startUserStreamListeners() {
-        TwitterStream stream = new TwitterStreamFactory(conf).getSingleton();
+        TwitterStream stream = new TwitterStreamFactory(conf).getInstance();
 
         stream.addListener(new UserStreamListener() {
             @Override
