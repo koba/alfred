@@ -6,6 +6,9 @@ package com.applink.ford.hellosdlandroid.providers;
 
 import com.applink.ford.hellosdlandroid.Alfred;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import io.reactivex.functions.Consumer;
 import twitter4j.DirectMessage;
 import twitter4j.MediaEntity;
@@ -141,7 +144,7 @@ public class TwitterProvider {
             @Override
             public void onStatus(Status status) {
                 lastTweetId = status.getId();
-                triggerNotificationReceivedConsumer(makeTweeterUsernamePronounceable(status.getUser().getScreenName()) + " ha twitteado: " + status.getText());
+                triggerNotificationReceivedConsumer(makeTweeterUsernamePronounceable(status.getUser().getScreenName()) + " ha twitteado: " + makeTweetPronounceable(status.getText()));
 
                 MediaEntity[] media = status.getMediaEntities();
                 if (media.length > 0) {
@@ -194,6 +197,18 @@ public class TwitterProvider {
                 }
             }
         });
+    }
+
+    private String makeTweetPronounceable(String message) {
+        String urlPattern = "((https?|ftp|gopher|telnet|file|Unsure|http):((//)|(\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)";
+        Pattern p = Pattern.compile(urlPattern,Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(message);
+        int i = 0;
+        while (m.find()) {
+            message = message.replaceAll(m.group(i),"").trim();
+            i++;
+        }
+        return message;
     }
 
     private String makeTweeterUsernamePronounceable(String username) {
